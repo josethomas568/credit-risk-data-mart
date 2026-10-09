@@ -1,0 +1,437 @@
+<title>Credit Card Risk Mart</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@87,600;87,700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: header with view switch, one filter row, then a 12-column grid of panels per view (stacks on phones). */
+:root {
+  --page: #f4f5f3; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #7d7b75;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10);
+  --accent: #2a78d6; --accent-ink: #1c5cab; --accent-wash: #e3eefb;
+  --b0: #c3c2b7; --b1: #f0a050; --b2: #e06a2c; --b3: #b5321e;
+  --seq-0: #f2f6fb; --seq-1: #cde2fb; --seq-2: #9ec5f4; --seq-3: #5598e7; --seq-4: #256abf; --seq-5: #104281;
+  --on-seq: #ffffff;
+  --good: #0ca30c; --good-ink: #006300; --warn: #fab219; --warn-wash: #fdf1d6; --warn-ink: #7a5400;
+  --crit: #d03b3b; --crit-wash: #fbe3e1; --crit-ink: #a12a2a;
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --page: #0f0f0e; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #95938c;
+  --grid: #2c2c2a; --axis: #45453f; --ring: rgba(255,255,255,0.10);
+  --accent: #3987e5; --accent-ink: #86b6ef; --accent-wash: #1b2a3d;
+  --b0: #55544e; --b1: #f2b27a; --b2: #e0702f; --b3: #c0442a;
+  --seq-0: #1f2329; --seq-1: #183152; --seq-2: #1c4c86; --seq-3: #256abf; --seq-4: #5598e7; --seq-5: #9ec5f4;
+  --on-seq: #0b0b0b;
+  --good: #0ca30c; --good-ink: #3fc23f; --warn: #fab219; --warn-wash: #3a2e12; --warn-ink: #f5c55a;
+  --crit: #d03b3b; --crit-wash: #3d1b1a; --crit-ink: #f08a7a;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --page: #0f0f0e; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #95938c;
+  --grid: #2c2c2a; --axis: #45453f; --ring: rgba(255,255,255,0.10);
+  --accent: #3987e5; --accent-ink: #86b6ef; --accent-wash: #1b2a3d;
+  --b0: #55544e; --b1: #f2b27a; --b2: #e0702f; --b3: #c0442a;
+  --seq-0: #1f2329; --seq-1: #183152; --seq-2: #1c4c86; --seq-3: #256abf; --seq-4: #5598e7; --seq-5: #9ec5f4;
+  --on-seq: #0b0b0b;
+  --good: #0ca30c; --good-ink: #3fc23f; --warn: #fab219; --warn-wash: #3a2e12; --warn-ink: #f5c55a;
+  --crit: #d03b3b; --crit-wash: #3d1b1a; --crit-ink: #f08a7a;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--page); color: var(--ink); font: 14px/1.5 var(--f-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 16px; }
+header.top { background: var(--surface); border-bottom: 1px solid var(--ring); }
+.titlebar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 24px; padding-block: 16px 12px; }
+.titlebar h1 { font: 700 26px/1.1 var(--f-display); font-stretch: 87%; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.titlebar .sub { color: var(--ink-2); font-size: 13px; }
+.titlebar .grow { flex: 1; }
+.seg { display: inline-flex; border: 1px solid var(--ring); border-radius: 8px; padding: 3px; gap: 2px; background: var(--page); flex-wrap: wrap; }
+.seg button { font: 600 13px var(--f-body); color: var(--ink-2); background: none; border: 0; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--ring); }
+button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.filters { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px; padding-block: 10px 14px; }
+.filters label { display: grid; gap: 2px; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.filters select { font: 500 13.5px var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--axis);
+  border-radius: 6px; padding: 5px 8px; min-width: 120px; max-width: 100%; }
+.filters .count { font-size: 13px; color: var(--ink-2); margin-left: auto; align-self: center; font-variant-numeric: tabular-nums; }
+.linkbtn { font: 500 13px var(--f-body); color: var(--accent-ink); background: none; border: 0; padding: 6px 4px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+main { padding-block: 18px 40px; }
+.grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+.panel { background: var(--surface); border: 1px solid var(--ring); border-radius: 8px; padding: 14px 16px 16px; min-width: 0; }
+.panel h2 { font: 700 15px/1.3 var(--f-display); font-stretch: 87%; margin: 0; }
+.panel .lede { color: var(--ink-2); font-size: 13px; margin: 2px 0 10px; max-width: 70ch; }
+.s12 { grid-column: span 12; } .s8 { grid-column: span 8; } .s7 { grid-column: span 7; } .s6 { grid-column: span 6; }
+.s5 { grid-column: span 5; } .s4 { grid-column: span 4; } .s3 { grid-column: span 3; }
+@media (max-width: 920px) { .s8, .s7, .s6, .s5, .s4 { grid-column: span 12; } .s3 { grid-column: span 6; } }
+@media (max-width: 460px) { .s3 { grid-column: span 12; } }
+.tile .k { font-size: 12px; color: var(--ink-2); }
+.tile .v { font: 600 28px/1.15 var(--f-body); letter-spacing: -0.01em; margin-top: 4px; }
+.tile .d { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+.up-bad { color: var(--crit-ink); } .down-good { color: var(--good-ink); }
+.note { display: flex; gap: 8px; align-items: flex-start; background: var(--warn-wash); color: var(--ink); border-radius: 6px;
+  padding: 8px 10px; font-size: 12.5px; margin: 0 0 10px; }
+.note b { color: var(--warn-ink); }
+.note .ic { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--warn); color: #3a2a00; font: 700 11px/16px var(--f-body); text-align: center; }
+svg { display: block; overflow: visible; }
+svg text { fill: var(--muted); font: 11px var(--f-body); font-variant-numeric: tabular-nums; }
+svg .lbl { fill: var(--ink); font-weight: 600; }
+svg .lbl2 { fill: var(--ink-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 600; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 1px solid var(--axis); padding: 6px 8px; white-space: nowrap; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th.n, td.n { text-align: right; }
+.matrix td.cell { text-align: center; min-width: 76px; border: 2px solid var(--surface); border-radius: 4px; }
+.matrix td.cell b { display: block; font-weight: 600; font-size: 13.5px; }
+.matrix td.cell span { font-size: 11px; opacity: .8; }
+.matrix th.rowh { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--ink); }
+.pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pill.PASS { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good-ink); }
+.pill.FAIL { background: var(--crit-wash); color: var(--crit-ink); }
+.pill.WARN { background: var(--warn-wash); color: var(--warn-ink); }
+.muted { color: var(--muted); } .small { font-size: 12.5px; }
+.ctl { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; margin: 4px 0 10px; font-size: 13px; color: var(--ink-2); }
+.ctl select { font: 500 13px var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--axis); border-radius: 6px; padding: 4px 6px; }
+#tip { position: fixed; z-index: 20; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--ring);
+  box-shadow: 0 6px 20px rgba(0,0,0,.14); border-radius: 6px; padding: 7px 10px; font-size: 12.5px; line-height: 1.45; max-width: 260px; }
+#tip b { font-weight: 600; }
+.hit { fill: transparent; cursor: default; }
+.colhover:hover .band { fill: var(--accent-wash); }
+.foot { color: var(--muted); font-size: 12px; margin-top: 18px; max-width: 90ch; }
+@media (prefers-reduced-motion: no-preference) { .bar { transition: width .25s ease, x .25s ease; } }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="titlebar">
+      <div>
+        <h1>Credit Card Risk Mart</h1>
+        <div class="sub">30,000 card accounts · monthly snapshots Apr–Sep 2005 · default observed Oct 2005 · amounts in NT$</div>
+      </div>
+      <span class="grow"></span>
+      <div class="seg" role="group" aria-label="View">
+        <button id="v-risk" data-view="risk" aria-pressed="true">Risk manager</button>
+        <button id="v-fin" data-view="fin" aria-pressed="false">Finance analyst</button>
+        <button id="v-dq" data-view="dq" aria-pressed="false">Data quality</button>
+      </div>
+    </div>
+    <div class="filters" id="filters">
+      <label for="f-month">Month<select id="f-month"></select></label>
+      <label for="f-lb">Credit limit<select id="f-lb"></select></label>
+      <label for="f-ab">Age<select id="f-ab"></select></label>
+      <label for="f-ed">Education<select id="f-ed"></select></label>
+      <label for="f-ms">Marital status<select id="f-ms"></select></label>
+      <label for="f-sx">Sex<select id="f-sx"></select></label>
+      <button class="linkbtn" id="reset" type="button">Reset filters</button>
+      <span class="count" id="count"></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="view-risk" class="grid"></section>
+  <section id="view-fin" class="grid" hidden></section>
+  <section id="view-dq" class="grid" hidden></section>
+  <p class="foot">Source: UCI Default of Credit Card Clients (Yeh &amp; Lien, 2009), built into a DuckDB mart by build_mart.py.
+    Buckets come from the repayment status code: ≤0 Current, 1 = 30, 2 = 60, ≥3 = 90+. Exposure is the positive statement balance.
+    Segment filters are for monitoring; sex, age and marital status are not inputs to credit decisions.</p>
+</main>
+<div id="tip" hidden></div>
+
+<script>
+const D = __DATA__;
+const N = D.n, M = 6, BK = ["Current", "30", "60", "90+"], BCOL = ["var(--b0)", "var(--b1)", "var(--b2)", "var(--b3)"];
+const X = D.data;
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const pct = (v, d = 1) => v == null || !isFinite(v) ? "–" : (v * 100).toFixed(d) + "%";
+const pts = v => (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(1) + " pts";
+const ntm = v => "NT$" + (v / 1e6).toLocaleString("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + "m";
+const int = v => Math.round(v).toLocaleString("en-US");
+const MON = D.months.map(m => m.slice(0, 3));
+
+// ------------------------------------------------------------------ filters
+const DIMS = {
+  lb: { label: "Credit limit", values: D.limit_bands, get: i => X.lb[i] - 1 },
+  ab: { label: "Age", values: D.dicts.ab, get: i => X.ab[i] },
+  ed: { label: "Education", values: D.dicts.ed, get: i => X.ed[i] },
+  ms: { label: "Marital status", values: D.dicts.ms, get: i => X.ms[i] },
+  sx: { label: "Sex", values: D.dicts.sx, get: i => X.sx[i] },
+};
+const ED_ORDER = ["Graduate school", "University", "High school", "Other / unknown"];
+const order = (k, vals) => k === "ed" ? ED_ORDER.filter(v => vals.includes(v)) : vals;
+const state = { month: 5, lb: -1, ab: -1, ed: -1, ms: -1, sx: -1, view: "risk", segDim: "lb" };
+
+$("#f-month").innerHTML = D.months.map((m, i) => `<option value="${i}">${m}</option>`).join("");
+for (const k of Object.keys(DIMS)) {
+  const vals = DIMS[k].values;
+  $("#f-" + k).innerHTML = `<option value="-1">All</option>` + order(k, vals).map(v => `<option value="${vals.indexOf(v)}">${esc(v)}</option>`).join("");
+}
+function syncControls() { $("#f-month").value = state.month; for (const k of Object.keys(DIMS)) $("#f-" + k).value = state[k]; }
+$("#f-month").onchange = e => { state.month = +e.target.value; render(); };
+for (const k of Object.keys(DIMS)) $("#f-" + k).onchange = e => { state[k] = +e.target.value; render(); };
+$("#reset").onclick = () => { Object.assign(state, { month: 5, lb: -1, ab: -1, ed: -1, ms: -1, sx: -1 }); syncControls(); render(); };
+document.querySelectorAll(".seg button").forEach(b => b.onclick = () => setView(b.dataset.view));
+function setView(v) {
+  state.view = v;
+  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.view === v));
+  for (const k of ["risk", "fin", "dq"]) $("#view-" + k).hidden = k !== v;
+  try { localStorage.setItem("crm-view", v); } catch (e) {}
+}
+
+function mask(st, skip) {
+  const m = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    let ok = 1;
+    for (const k of Object.keys(DIMS)) if (k !== skip && st[k] >= 0 && DIMS[k].get(i) !== st[k]) { ok = 0; break; }
+    m[i] = ok;
+  }
+  return m;
+}
+
+// ------------------------------------------------------------------ aggregation (pure; mirrors the mart SQL)
+function aggregate(mk) {
+  const A = {
+    n: 0, defaults: 0,
+    cnt: Array.from({ length: M }, () => [0, 0, 0, 0]),
+    exp: Array.from({ length: M }, () => [0, 0, 0, 0]),
+    bal: Array(M).fill(0), pay: Array(M).fill(0), priorPos: Array(M).fill(0), lim: Array(M).fill(0),
+    roll: Array.from({ length: M }, () => Array.from({ length: 4 }, () => [0, 0, 0, 0])),
+    sep: Array.from({ length: 4 }, () => ({ n: 0, d: 0, exp: 0, ead: 0 })),
+    worst: Array.from({ length: 4 }, () => ({ n: 0, d: 0 })),
+  };
+  for (let i = 0; i < N; i++) {
+    if (!mk[i]) continue;
+    A.n++; const dflt = X.d[i]; A.defaults += dflt;
+    let worst = 0;
+    for (let t = 0; t < M; t++) {
+      const j = i * M + t, b = X.b[j], bal = X.bal[j], e = bal > 0 ? bal : 0;
+      A.cnt[t][b]++; A.exp[t][b] += e; A.bal[t] += bal; A.pay[t] += X.pay[j]; A.lim[t] += X.lim[i];
+      if (t > 0) { const pb = X.b[j - 1], pbal = X.bal[j - 1]; A.roll[t][pb][b]++; A.priorPos[t] += pbal > 0 ? pbal : 0; }
+      if (b > worst) worst = b;
+    }
+    const sb = X.b[i * M + 5], se = Math.max(X.bal[i * M + 5], 0);
+    A.sep[sb].n++; A.sep[sb].d += dflt; A.sep[sb].exp += se; if (dflt) A.sep[sb].ead += se;
+    A.worst[worst].n++; A.worst[worst].d += dflt;
+  }
+  return A;
+}
+function segmentRates(dim, st) {          // default rate by segment, honouring the other filters
+  const mk = mask(st, dim), vals = DIMS[dim].values, g = vals.map(() => ({ n: 0, d: 0, exp: 0, ead: 0, e30: 0 }));
+  for (let i = 0; i < N; i++) {
+    if (!mk[i]) continue;
+    const s = g[DIMS[dim].get(i)], j = i * M + 5, e = Math.max(X.bal[j], 0);
+    s.n++; s.d += X.d[i]; s.exp += e; if (X.d[i]) s.ead += e; if (X.b[j] >= 1) s.e30 += e;
+  }
+  return order(dim, vals).map(v => ({ v, ...g[vals.indexOf(v)], sel: st[dim] < 0 || vals.indexOf(v) === st[dim] }));
+}
+
+// ------------------------------------------------------------------ parity with the mart (unfiltered)
+const PARITY = (() => {
+  const A = aggregate(new Uint8Array(N).fill(1)), issues = [];
+  D.ref.portfolio.forEach((r, t) => {
+    const a30 = A.cnt[t][1] + A.cnt[t][2] + A.cnt[t][3], ex = A.exp[t].reduce((s, x) => s + x, 0);
+    const e30 = A.exp[t][1] + A.exp[t][2] + A.exp[t][3];
+    if (a30 !== r.accounts_30plus) issues.push(`${r.month_key} 30+ accounts ${a30} vs ${r.accounts_30plus}`);
+    if (Math.abs(ex - r.exposure) > 0.5) issues.push(`${r.month_key} exposure ${ex} vs ${r.exposure}`);
+    if (Math.abs(e30 - r.exposure_30plus) > 0.5) issues.push(`${r.month_key} 30+ exposure`);
+    if (Math.abs(A.pay[t] - r.payments) > 0.5) issues.push(`${r.month_key} payments`);
+  });
+  D.ref.roll.forEach(r => { const t = D.month_keys.indexOf(r.to_month);
+    const v = A.roll[t][BK.indexOf(r.from_bucket)][BK.indexOf(r.to_bucket)]; if (v !== r.accounts) issues.push(`roll ${r.to_month} ${r.from_bucket}->${r.to_bucket}`); });
+  D.ref.default_by_bucket.forEach((r, k) => { const s = A.sep[k]; if (s.n !== r.accounts || s.d !== r.defaults || Math.abs(s.ead - r.exposure_at_default) > 0.5) issues.push(`default ${r.bucket}`); });
+  const checks = D.ref.portfolio.length * 4 + D.ref.roll.length + D.ref.default_by_bucket.length;
+  return { ok: issues.length === 0, issues, checks };
+})();
+window.__PARITY__ = PARITY;
+
+// ------------------------------------------------------------------ tooltip
+const tip = $("#tip");
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest && e.target.closest("[data-tip]");
+  if (!t) { tip.hidden = true; return; }
+  tip.innerHTML = t.getAttribute("data-tip"); tip.hidden = false;
+  const r = tip.getBoundingClientRect(); let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+});
+document.addEventListener("pointerleave", () => tip.hidden = true);
+
+// ------------------------------------------------------------------ chart helpers (SVG, one scale per chart)
+function niceScale(v, maxTicks = 5) {
+  if (!(v > 0)) return { max: 1, step: 0.25, n: 4 };
+  const raw = v / maxTicks, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(f => f * p).find(st => st >= raw);
+  const n = Math.ceil(v / step - 1e-9); return { max: n * step, step, n };
+}
+function niceMax(v) { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))), f = v / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function lineChart({ series, fmt, w = 620, h = 230, hi, mark, ticks = 4 }) {
+  const pad = { l: 44, r: 64, t: 12, b: 26 }, iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const sc = niceScale(hi || Math.max(...series.flatMap(s => s.values.filter(v => v != null))) * 1.05), max = sc.max; ticks = sc.n;
+  const x = i => pad.l + iw * i / (M - 1), y = v => pad.t + ih - v / max * ih;
+  let g = "", bands = "";
+  for (let k = 0; k <= ticks; k++) { const v = max * k / ticks;
+    g += `<line x1="${pad.l}" x2="${w - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="${k ? "var(--grid)" : "var(--axis)"}"/><text x="${pad.l - 6}" y="${y(v) + 4}" text-anchor="end">${fmt(v)}</text>`; }
+  MON.forEach((m, i) => g += `<text x="${x(i)}" y="${h - 6}" text-anchor="middle">${m}</text>`);
+  if (mark != null) g += `<line x1="${x(mark)}" x2="${x(mark)}" y1="${pad.t}" y2="${pad.t + ih}" stroke="var(--warn)" stroke-dasharray="3 3"/><text x="${x(mark) - 4}" y="${pad.t + 10}" text-anchor="end">coding change</text>`;
+  series.forEach(s => {
+    const p = s.values.map((v, i) => v == null ? null : [x(i), y(v)]).filter(Boolean);
+    g += `<polyline points="${p.map(q => q.join(",")).join(" ")}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    p.forEach(q => g += `<circle cx="${q[0]}" cy="${q[1]}" r="3.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`);
+    const last = p[p.length - 1]; if (series.length > 1 || s.label) g += `<text class="lbl" x="${last[0] + 8}" y="${last[1] + 4}">${series.length > 1 ? esc(s.name) + " " : ""}${fmt(s.values[M - 1])}</text>`;
+  });
+  // hover columns
+  MON.forEach((m, i) => { if (series.every(s => s.values[i] == null)) return;
+    const tipHtml = `<b>${D.months[i]}</b><br>` + series.map(s => `${esc(s.name)}: <b>${fmt(s.values[i])}</b>`).join("<br>");
+    bands += `<g class="colhover" data-tip="${esc(tipHtml)}"><rect class="band" x="${Math.max(pad.l, x(i) - iw / (M - 1) / 2)}" y="${pad.t}" width="${iw / (M - 1) / (i === 0 || i === M - 1 ? 2 : 1)}" height="${ih}" fill="transparent" opacity=".6"/></g>`; });
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="${esc(series.map(s => s.name).join(", "))} by month">${bands}<g style="pointer-events:none">${g}</g></svg>`;
+}
+function hbars(rows, { fmt, ref, refLabel, w = 560, color = "var(--accent)", tipf }) {
+  const rowH = 30, pad = { l: 132, r: 70, t: ref != null ? 18 : 4, b: 20 }, iw = w - pad.l - pad.r, h = pad.t + rows.length * rowH + pad.b;
+  const sc = niceScale(Math.max(...rows.map(r => r.value), ref || 0) * 1.05, 4), max = sc.max, x = v => pad.l + v / max * iw;
+  let g = "";
+  for (let k = 0; k <= sc.n; k++) { const v = sc.step * k; g += `<line x1="${x(v)}" x2="${x(v)}" y1="${pad.t}" y2="${h - pad.b}" stroke="${k ? "var(--grid)" : "var(--axis)"}"/><text x="${x(v)}" y="${h - 4}" text-anchor="middle">${fmt(v)}</text>`; }
+  rows.forEach((r, i) => { const y0 = pad.t + i * rowH + 6, bh = rowH - 12;
+    g += `<g data-tip="${esc(tipf(r))}"><rect class="hit" x="0" y="${pad.t + i * rowH}" width="${w}" height="${rowH}"/>`;
+    g += `<text x="${pad.l - 8}" y="${y0 + bh / 2 + 4}" text-anchor="end" class="${r.sel === false ? "" : "lbl2"}">${esc(r.label)}</text>`;
+    g += `<path d="M${pad.l},${y0} H${Math.max(pad.l, x(r.value) - 4)} a4,4 0 0 1 4,4 V${y0 + bh - 4} a4,4 0 0 1 -4,4 H${pad.l} Z" fill="${color}" opacity="${r.sel === false ? .3 : 1}"/>`;
+    g += `<text class="lbl" x="${x(r.value) + 6}" y="${y0 + bh / 2 + 4}">${fmt(r.value)}</text></g>`; });
+  if (ref != null) g += `<line x1="${x(ref)}" x2="${x(ref)}" y1="${pad.t}" y2="${h - pad.b}" stroke="var(--ink)" stroke-dasharray="4 3"/><text x="${x(ref)}" y="11" text-anchor="middle" class="lbl2">${esc(refLabel)}</text>`;
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img">${g}</svg>`;
+}
+function stackedCols(A, { w = 620, h = 250 }) {
+  const pad = { l: 54, r: 10, t: 12, b: 26 }, iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const tot = A.exp.map(r => r.reduce((s, x) => s + x, 0)), sc = niceScale(Math.max(...tot) * 1.08, 4), max = sc.max;
+  const y = v => pad.t + ih - v / max * ih, step = iw / M, bw = Math.min(56, step * .58);
+  let g = "";
+  for (let k = 0; k <= sc.n; k++) { const v = sc.step * k; g += `<line x1="${pad.l}" x2="${w - pad.r}" y1="${y(v)}" y2="${y(v)}" stroke="${k ? "var(--grid)" : "var(--axis)"}"/><text x="${pad.l - 6}" y="${y(v) + 4}" text-anchor="end">${(v / 1e6).toLocaleString("en-US")}m</text>`; }
+  A.exp.forEach((r, t) => { const x0 = pad.l + step * t + (step - bw) / 2; let acc = 0;
+    r.forEach((v, b) => { if (v <= 0) return; const top = y(acc + v), bot = y(acc); acc += v;
+      const hgt = Math.max(0, bot - top - (acc < tot[t] ? 2 : 0));
+      g += `<rect x="${x0}" y="${top + (acc < tot[t] ? 0 : 0)}" width="${bw}" height="${hgt}" rx="${b === 3 || acc >= tot[t] - 1 ? 3 : 0}" fill="${BCOL[b]}" data-tip="${esc(`<b>${D.months[t]} · ${BK[b]}</b><br>${ntm(v)} · ${pct(v / tot[t])} of exposure<br>${int(A.cnt[t][b])} accounts`)}"/>`; });
+    g += `<text x="${x0 + bw / 2}" y="${h - 6}" text-anchor="middle">${MON[t]}</text>`;
+    g += `<text class="lbl" x="${x0 + bw / 2}" y="${y(tot[t]) - 6}" text-anchor="middle">${(tot[t] / 1e6).toFixed(0)}m</text>`; });
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Exposure by delinquency bucket and month">${g}</svg>
+    <div class="legend">${BK.map((b, i) => `<span><i style="background:${BCOL[i]}"></i>${b === "Current" ? "Current" : b + " days"}</span>`).join("")}</div>`;
+}
+function tile(span, k, v, d) { return `<div class="panel tile ${span}"><div class="k">${k}</div><div class="v">${v}</div><div class="d">${d}</div></div>`; }
+function delta(cur, prev, upBad = true) { if (prev == null) return `<span class="muted">first month</span>`; const dv = cur - prev;
+  return `<span class="${(dv > 0) === upBad ? "up-bad" : "down-good"}">${pts(dv)}</span> vs ${MON[state.month - 1]}`; }
+const SEP_NOTE = `<p class="note"><span class="ic" aria-hidden="true">!</span><span><b>Sep 2005 is coded differently.</b> Code 1 (30 days) is 12.3% of accounts in Sep and almost never used Apr–Aug, so moves into and out of the 30 bucket in Sep reflect the coding change, not only behaviour (test T17).</span></p>`;
+const SEG_SEL = () => `<label class="ctl" for="segdim">Segment by <select id="segdim">${Object.keys(DIMS).map(k => `<option value="${k}" ${k === state.segDim ? "selected" : ""}>${DIMS[k].label}</option>`).join("")}</select></label>`;
+function bindSeg(root) { const s = root.querySelector("#segdim"); if (s) s.onchange = e => { state.segDim = e.target.value; render(); }; }
+
+// ------------------------------------------------------------------ views
+function render() {
+  const mk = mask(state), A = aggregate(mk), t = state.month;
+  $("#count").textContent = A.n === N ? `All ${int(N)} accounts` : `${int(A.n)} of ${int(N)} accounts`;
+  try { localStorage.setItem("crm-state", JSON.stringify(state)); } catch (e) {}
+  if (A.n === 0) { for (const v of ["risk", "fin"]) $("#view-" + v).innerHTML = `<div class="panel s12"><h2>No accounts match these filters</h2><p class="lede">Widen a filter or reset them.</p></div>`; renderDQ(); return; }
+  renderRisk(A, t); renderFin(A, t); renderDQ();
+}
+
+function renderRisk(A, t) {
+  const n = A.n, rate = (tt, lo) => A.cnt[tt].slice(lo).reduce((s, x) => s + x, 0) / n;
+  const r30 = rate(t, 1), r90 = rate(t, 3);
+  const cur = A.roll[t] ? A.roll[t][0] : null, c2d = t > 0 ? (cur[1] + cur[2] + cur[3]) / Math.max(1, cur.reduce((s, x) => s + x, 0)) : null;
+  const pc = t > 1 ? A.roll[t - 1][0] : null, c2dPrev = pc ? (pc[1] + pc[2] + pc[3]) / Math.max(1, pc.reduce((s, x) => s + x, 0)) : null;
+  let h = "";
+  h += tile("s3", `30+ days past due · ${D.months[t]}`, pct(r30), delta(r30, t > 0 ? rate(t - 1, 1) : null));
+  h += tile("s3", `90+ days past due · ${D.months[t]}`, pct(r90, 2), delta(r90, t > 0 ? rate(t - 1, 3) : null));
+  h += tile("s3", `Current → delinquent · into ${MON[t]}`, t > 0 ? pct(c2d) : "–", t > 0 ? delta(c2d, c2dPrev) : "No prior month in the data");
+  h += tile("s3", "Default rate · Oct 2005", pct(A.defaults / n), `${int(A.defaults)} of ${int(n)} accounts defaulted`);
+
+  const trend = [1, 2, 3].map(lo => ({ name: lo === 1 ? "30+" : lo === 2 ? "60+" : "90+", color: BCOL[lo], values: D.months.map((_, tt) => rate(tt, lo)) }));
+  h += `<div class="panel s7"><h2>Delinquency rate by month</h2><p class="lede">Share of accounts 30, 60 and 90+ days past due. The 30+ and 60+ lines sit together until Sep because code 1 is rarely used before then.</p>
+    ${lineChart({ series: trend, fmt: v => pct(v, 1), mark: 5 })}
+    <div class="legend">${trend.map(s => `<span><i style="background:${s.color}"></i>${s.name} days past due</span>`).join("")}</div></div>`;
+
+  // roll matrix
+  let rm = "";
+  if (t === 0) rm = `<p class="muted">Apr 2005 is the first month in the data, so there is no prior month to roll from. Pick May–Sep.</p>`;
+  else {
+    const R = A.roll[t], maxv = 1;
+    rm = (t === 5 ? SEP_NOTE : "") + `<div class="scroll"><table class="matrix"><thead><tr><th>From ${MON[t - 1]} ↓ / to ${MON[t]} →</th>${BK.map(b => `<th class="n" style="text-align:center">${b}</th>`).join("")}<th class="n">Accounts</th></tr></thead><tbody>`;
+    R.forEach((row, f) => { const tot = row.reduce((s, x) => s + x, 0);
+      rm += `<tr><th class="rowh" scope="row">${BK[f]}</th>` + row.map((v, to) => { const r = tot ? v / tot : 0, lvl = Math.min(5, Math.ceil(r * 5 / maxv));
+        const bg = tot ? `var(--seq-${lvl})` : "var(--page)", fg = lvl >= 4 ? "var(--on-seq)" : "var(--ink)";
+        const kind = to > f ? "roll forward" : to === 0 && f > 0 ? "cure" : to < f ? "roll back" : "stay";
+        return `<td class="cell" style="background:${bg};color:${fg}" data-tip="${esc(`<b>${BK[f]} → ${BK[to]}</b> (${kind})<br>${int(v)} of ${int(tot)} accounts`)}"><b>${tot ? pct(r, 1) : "–"}</b><span>${int(v)}</span></td>`; }).join("")
+        + `<td class="n">${int(tot)}</td></tr>`; });
+    rm += `</tbody></table></div><p class="small muted" style="margin:8px 0 0">Each row adds to 100%: where last month's accounts in that bucket ended up. Cells right of the diagonal roll forward; the first column is the cure rate.</p>`;
+  }
+  h += `<div class="panel s5"><h2>Roll rates · ${t > 0 ? MON[t - 1] + " → " + MON[t] : "pick a month"}</h2><p class="lede">Change the month filter to see other transitions.</p>${rm}</div>`;
+
+  // default by segment
+  const seg = segmentRates(state.segDim, state), port = A.defaults / n;
+  h += `<div class="panel s7"><h2>Default rate by ${DIMS[state.segDim].label.toLowerCase()}</h2><p class="lede">Share of accounts that defaulted on the Oct 2005 payment. Dashed line: the filtered portfolio. Other filters still apply.</p>${SEG_SEL()}
+    ${hbars(seg.filter(r => r.n).map(r => ({ label: r.v, value: r.d / r.n, sel: r.sel, r })), { fmt: v => pct(v, 0), ref: port, refLabel: "portfolio " + pct(port, 1),
+      tipf: q => `<b>${esc(q.label)}</b><br>Default rate ${pct(q.value)}<br>${int(q.r.d)} of ${int(q.r.n)} accounts<br>${(q.value / port).toFixed(2)}× the filtered portfolio` })}</div>`;
+
+  // default by Sep bucket + worst status
+  const sepRows = A.sep.map((s, k) => ({ label: BK[k] === "Current" ? "Current" : BK[k] + " days", value: s.n ? s.d / s.n : 0, r: s })).filter(r => r.r.n);
+  const worstRows = A.worst.map((s, k) => ({ label: ["Never late", "Worst 30", "Worst 60", "Worst 90+"][k], value: s.n ? s.d / s.n : 0, r: s })).filter(r => r.r.n);
+  const tf = q => `<b>${esc(q.label)}</b><br>Default rate ${pct(q.value)}<br>${int(q.r.d)} of ${int(q.r.n)} accounts`;
+  h += `<div class="panel s5"><h2>Default rate by delinquency</h2><p class="lede">By bucket in Sep 2005, the last month before default is observed, and by the worst bucket in six months.</p>
+    <div class="small muted" style="margin-bottom:2px">Sep 2005 bucket</div>${hbars(sepRows, { fmt: v => pct(v, 0), w: 460, color: "var(--b2)", tipf: tf })}
+    <div class="small muted" style="margin:10px 0 2px">Worst bucket, Apr–Sep</div>${hbars(worstRows, { fmt: v => pct(v, 0), w: 460, color: "var(--b3)", tipf: tf })}</div>`;
+  $("#view-risk").innerHTML = h; bindSeg($("#view-risk"));
+}
+
+function renderFin(A, t) {
+  const tot = A.exp[t].reduce((s, x) => s + x, 0), d30 = A.exp[t][1] + A.exp[t][2] + A.exp[t][3];
+  const prevTot = t > 0 ? A.exp[t - 1].reduce((s, x) => s + x, 0) : null, prevShare = t > 0 ? (A.exp[t - 1][1] + A.exp[t - 1][2] + A.exp[t - 1][3]) / prevTot : null;
+  const ead = A.sep.reduce((s, x) => s + x.ead, 0), sepExp = A.sep.reduce((s, x) => s + x.exp, 0);
+  const prate = t > 0 ? A.pay[t] / A.priorPos[t] : null, util = A.bal[t] / A.lim[t];
+  let h = "";
+  h += tile("s3", `Exposure · ${D.months[t]}`, ntm(tot), prevTot ? `${tot >= prevTot ? "+" : "−"}${pct(Math.abs(tot / prevTot - 1))} vs ${MON[t - 1]}` : "first month");
+  h += tile("s3", `Exposure 30+ days past due`, pct(d30 / tot), `${ntm(d30)} · ${t > 0 ? delta(d30 / tot, prevShare) : "first month"}`);
+  h += tile("s3", "Exposure at default · Oct 2005", ntm(ead), `${pct(ead / sepExp)} of Sep 2005 exposure`);
+  h += tile("s3", `Payment rate · ${D.months[t]}`, prate == null ? "–" : pct(prate), t > 0 ? `Paid in ${MON[t]} ÷ ${MON[t - 1]} balance · utilization ${pct(util)}` : "Needs a prior month");
+
+  h += `<div class="panel s6"><h2>Exposure by delinquency bucket</h2><p class="lede">Positive statement balances, NT$ millions. Credit balances count as zero.</p>${stackedCols(A, {})}</div>`;
+
+  let e = `<div class="scroll"><table><thead><tr><th>Sep bucket</th><th class="n">Accounts</th><th class="n">Exposure</th><th class="n">Defaulted</th><th class="n">Share</th></tr></thead><tbody>`;
+  A.sep.forEach((s, k) => e += `<tr><td><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:${BCOL[k]};margin-right:7px"></i>${BK[k] === "Current" ? "Current" : BK[k] + " days"}</td><td class="n">${int(s.n)}</td><td class="n">${ntm(s.exp)}</td><td class="n">${ntm(s.ead)}</td><td class="n">${pct(s.exp ? s.ead / s.exp : 0)}</td></tr>`);
+  e += `<tr><td><b>Total</b></td><td class="n"><b>${int(A.n)}</b></td><td class="n"><b>${ntm(sepExp)}</b></td><td class="n"><b>${ntm(ead)}</b></td><td class="n"><b>${pct(ead / sepExp)}</b></td></tr></tbody></table></div>`;
+  h += `<div class="panel s6"><h2>Exposure at default by bucket</h2><p class="lede">Sep 2005 balance of accounts that defaulted in Oct 2005: the loss base before recoveries.</p>${e}
+    <p class="small muted" style="margin:8px 0 0">Current accounts hold ${pct(A.sep[0].ead / ead, 0)} of defaulted exposure: most defaults come from accounts that were not yet past due.</p></div>`;
+
+  const pr = D.months.map((_, tt) => tt ? A.pay[tt] / A.priorPos[tt] : null), ut = D.months.map((_, tt) => A.bal[tt] / A.lim[tt]);
+  h += `<div class="panel s6"><h2>Payment rate</h2><p class="lede">Payments in the month ÷ the prior month's positive balance.</p>${lineChart({ series: [{ name: "Payment rate", label: true, color: "var(--accent)", values: pr }], fmt: v => pct(v, 1), h: 200 })}</div>`;
+  h += `<div class="panel s6"><h2>Utilization</h2><p class="lede">Statement balances ÷ credit limits.</p>${lineChart({ series: [{ name: "Utilization", label: true, color: "var(--accent)", values: ut }], fmt: v => pct(v, 0), h: 200 })}</div>`;
+
+  const seg = segmentRates(state.segDim, state);
+  const segExp = seg.reduce((s, r) => s + r.exp, 0);
+  let st = `<div class="scroll"><table><thead><tr><th>${DIMS[state.segDim].label}</th><th class="n">Accounts</th><th class="n">Exposure · Sep</th><th class="n">Share</th><th class="n">30+ exposure</th><th class="n">Defaulted exposure</th><th class="n">Default rate</th></tr></thead><tbody>`;
+  seg.filter(r => r.n).forEach(r => st += `<tr style="${r.sel ? "" : "opacity:.45"}"><td>${esc(r.v)}</td><td class="n">${int(r.n)}</td><td class="n">${ntm(r.exp)}</td><td class="n">${pct(r.exp / segExp)}</td><td class="n">${pct(r.exp ? r.e30 / r.exp : 0)}</td><td class="n">${ntm(r.ead)}</td><td class="n">${pct(r.d / r.n)}</td></tr>`);
+  st += `</tbody></table></div>`;
+  h += `<div class="panel s12"><h2>Exposure by segment · Sep 2005</h2><p class="lede">Where the balance sits and how much of it defaulted. Other filters still apply; rows outside the current filter are dimmed.</p>${SEG_SEL()}${st}</div>`;
+  $("#view-fin").innerHTML = h; bindSeg($("#view-fin"));
+}
+
+function renderDQ() {
+  if ($("#view-dq").dataset.done) return;
+  const dq = D.dq, c = s => dq.filter(r => r.status === s).length;
+  let h = "";
+  h += tile("s3", "Blocking tests", `${dq.filter(r => r.severity === "ERROR" && r.status === "PASS").length} / ${dq.filter(r => r.severity === "ERROR").length} pass`, "Uniqueness, validity, reconciliation");
+  h += tile("s3", "Source-issue warnings", c("WARN"), "Known issues, measured every build");
+  h += tile("s3", "Dashboard vs mart", PARITY.ok ? "Match" : "Mismatch", `${PARITY.checks} figures compared on load${PARITY.ok ? "" : ": " + esc(PARITY.issues.slice(0, 2).join("; "))}`);
+  h += tile("s3", "Accounts × months", `${int(N)} × ${M}`, `${int(N * M)} snapshots`);
+  let t = `<div class="scroll"><table><thead><tr><th>Test</th><th>Rule</th><th>Status</th><th class="n">Failing rows</th><th>Example</th></tr></thead><tbody>`;
+  dq.forEach(r => t += `<tr><td><b>${esc(r.test_id)}</b> ${esc(r.test_name)}<div class="small muted">${esc(r.category)} · ${esc(r.severity)}</div></td><td class="small">${esc(r.rule)}</td><td><span class="pill ${r.status}">${r.status}</span></td><td class="n">${int(r.failing_rows)}</td><td class="small muted">${esc((r.sample || "").split(" | ").slice(0, 2).join(" · "))}</td></tr>`);
+  t += `</tbody></table></div>`;
+  h += `<div class="panel s12"><h2>Data-quality tests</h2><p class="lede">Run on every build. A failing ERROR test stops the build; WARN tests count known problems in the source file.</p>${t}</div>`;
+  $("#view-dq").innerHTML = h; $("#view-dq").dataset.done = "1";
+}
+
+// ------------------------------------------------------------------ start
+try { const s = JSON.parse(localStorage.getItem("crm-state") || "null"); if (s) Object.assign(state, s, { view: state.view }); } catch (e) {}
+syncControls();
+render();
+let v0 = "risk"; try { v0 = localStorage.getItem("crm-view") || "risk"; } catch (e) {}
+const hv = location.hash.slice(1); if (["risk", "fin", "dq"].includes(hv)) v0 = hv;
+setView(v0);
+</script>

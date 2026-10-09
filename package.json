@@ -1,0 +1,1 @@
+{ "private": true, "scripts": { "test": "node tests/test_dashboard_parity.js" }, "devDependencies": { "jsdom": "^24.1.3" } }

@@ -1,0 +1,13 @@
+status_code,status_desc,months_past_due,bucket,documented_in_source
+-2,No consumption,0,Current,false
+-1,Paid in full,0,Current,true
+0,Revolving (minimum paid),0,Current,false
+1,1 month late,1,30,true
+2,2 months late,2,60,true
+3,3 months late,3,90+,true
+4,4 months late,4,90+,true
+5,5 months late,5,90+,true
+6,6 months late,6,90+,true
+7,7 months late,7,90+,true
+8,8 months late,8,90+,true
+9,9+ months late,9,90+,true

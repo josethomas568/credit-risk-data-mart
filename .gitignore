@@ -1,0 +1,6 @@
+output/*.duckdb
+output/injected/
+output/dq_report_injected.md
+node_modules/
+__pycache__/
+.pytest_cache/

@@ -1,0 +1,18 @@
+test_id,test_name,category,severity,rule,failing_rows,status,sample
+T01,No duplicate accounts,Uniqueness,ERROR,account_id is unique in dim_account,0,PASS,""
+T02,One snapshot per account per month,Uniqueness,ERROR,"(account_id, month) is unique in fact_account_month",0,PASS,""
+T03,Every account has six snapshots,Completeness,ERROR,Apr-Sep 2005 present for each account,0,PASS,""
+T04,Valid status codes,Validity,ERROR,Repayment status in -2..9,0,PASS,""
+T05,Every snapshot is bucketed,Validity,ERROR,Bucket is one of Current / 30 / 60 / 90+,0,PASS,""
+T06,Valid account attributes,Validity,ERROR,"Limit > 0, sex 1-2, age 18-100, education 0-6, marriage 0-3",0,PASS,""
+T07,Payments not negative,Validity,ERROR,payment_amount >= 0,0,PASS,""
+T08,Default flag is 0/1,Validity,ERROR,"default.payment.next.month in (0, 1)",0,PASS,""
+T09,Balances reconcile to source,Reconciliation,ERROR,"Monthly account count, balance and payment totals equal the source file",0,PASS,""
+T10,Statement roll-forward closes,Reconciliation,ERROR,"Prior balance - payment + new activity = balance, per account-month",0,PASS,""
+T11,Derived tables reconcile to snapshot,Reconciliation,ERROR,"Bucket, roll-rate and segment tables total back to the snapshot",0,PASS,""
+T12,Status skips a month (source quirk),Source issue,WARN,Months past due rises by more than 1 in a month,6209,WARN,1 / 2005-08: 0 -> 2 months past due | 1000 / 2005-08: 0 -> 2 months past due | 10008 / 2005-07: 0 -> 2 months past due | 10018 / 2005-05: 0 -> 2 months past due | 10018 / 2005-08: 0 -> 2 months past due
+T13,Undocumented source codes,Source issue,WARN,"Status -2/0, education 0/5/6, marriage 0 are not in the UCI codebook",6,WARN,education 0: 14 accounts use undocumented education code 0 | education 5: 280 accounts use undocumented education code 5 | education 6: 51 accounts use undocumented education code 6 | marriage 0: 54 accounts use undocumented marriage code 0 | status -2: 24415 snapshots use undocumented status code -2
+T14,Balance over credit limit,Source issue,WARN,statement balance > credit limit,6,WARN,2005-04: 798 accounts over limit; 89 over 120% | 2005-05: 820 accounts over limit; 105 over 120% | 2005-06: 1018 accounts over limit; 144 over 120% | 2005-07: 1583 accounts over limit; 207 over 120% | 2005-08: 1940 accounts over limit; 257 over 120%
+T15,Credit balances,Source issue,WARN,statement balance < 0 (excluded from exposure),6,WARN,"2005-04: 688 accounts with a credit balance, total -2,115,251 | 2005-05: 655 accounts with a credit balance, total -1,070,734 | 2005-06: 675 accounts with a credit balance, total -1,101,089 | 2005-07: 655 accounts with a credit balance, total -960,421 | 2005-08: 669 accounts with a credit balance, total -823,286"
+T16,"""No consumption"" with a balance",Source issue,WARN,status -2 with a positive statement balance,6,WARN,2005-04: 1428 accounts coded -2 with a positive statement balance | 2005-05: 1446 accounts coded -2 with a positive statement balance | 2005-06: 1446 accounts coded -2 with a positive statement balance | 2005-07: 1573 accounts coded -2 with a positive statement balance | 2005-08: 1676 accounts coded -2 with a positive statement balance
+T17,Status-code mix shift,Source issue,WARN,A code's monthly share moves > 5 points vs the other months (coding change),2,WARN,2005-09 code -2: 9.2% of accounts vs 14.4% in the other months | 2005-09 code 1: 12.3% of accounts vs 0.0% in the other months
