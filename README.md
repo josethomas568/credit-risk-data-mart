@@ -35,6 +35,16 @@ So the source system almost certainly changed how it codes delinquency in Septem
 change on every build, and the dashboard warns about it on the September roll rates. The mart keeps the
 published codes rather than guessing a remapping.
 
+## On AWS
+
+`aws/` ports the mart to AWS: S3 holds the source and mart tables as Parquet, Athena queries them,
+and QuickSight rebuilds the risk-manager view. One command deploys it and one removes it. Everything
+runs offline first with `--dry-run`. See [aws/README.md](aws/README.md).
+
+```bash
+python aws/deploy.py --dry-run && python aws/deploy.py
+```
+
 ## Model
 
 ```
@@ -123,6 +133,7 @@ sql/03_snapshots.sql        fact_account_month (unpivot + roll-forward)
 sql/04_metrics.sql          buckets, roll rates, default rates, portfolio summary
 sql/05_dq_tests.sql         17 data-quality tests
 dashboard/template.html     dashboard; build_mart.py injects the data
-tests/                      pytest suite + dashboard parity test
+aws/                        S3 + Athena + QuickSight port: export, CloudFormation, deploy, teardown
+tests/                      pytest suite (mart, Athena SQL, AWS deploy rehearsal) + dashboard parity test
 output/                     dashboard, dq_report.md, tables/*.csv
 ```

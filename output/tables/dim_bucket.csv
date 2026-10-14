@@ -1,5 +1,5 @@
 bucket,bucket_order,bucket_desc
-Current,0,"Not past due (no balance, paid in full, or minimum paid)"
 30,1,1 month past due
 60,2,2 months past due
 90+,3,3 or more months past due
+Current,0,"Not past due (no balance, paid in full, or minimum paid)"

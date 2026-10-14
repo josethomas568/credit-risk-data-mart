@@ -1,0 +1,176 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Credit card risk data mart on AWS - S3 data lake bucket, Glue database, Athena workgroup with a
+  per-query scan limit, and an IAM role QuickSight uses to query Athena. Tables, views and
+  QuickSight assets are created by aws/deploy.py.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: credit-risk-mart
+    AllowedPattern: "[a-z0-9-]+"
+  DatabaseName:
+    Type: String
+    Default: credit_risk_mart
+    AllowedPattern: "[a-z0-9_]+"
+  ScanLimitBytes:
+    Type: Number
+    Default: 1073741824
+    MinValue: 10485760
+    Description: Athena cancels any query that would scan more than this (default 1 GB, about $0.005).
+
+Resources:
+  LakeBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub "${ProjectName}-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-athena-results
+            Status: Enabled
+            Prefix: athena-results/
+            ExpirationInDays: 7
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  LakeBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LakeBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              - !GetAtt LakeBucket.Arn
+              - !Sub "${LakeBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
+  Database:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Ref DatabaseName
+        Description: Credit card risk data mart (UCI Default of Credit Card Clients, Apr-Sep 2005)
+
+  WorkGroup:
+    Type: AWS::Athena::WorkGroup
+    Properties:
+      Name: !Ref ProjectName
+      Description: Queries for the credit risk data mart, with a per-query scan limit
+      RecursiveDeleteOption: true
+      State: ENABLED
+      WorkGroupConfiguration:
+        EnforceWorkGroupConfiguration: true
+        PublishCloudWatchMetricsEnabled: false
+        BytesScannedCutoffPerQuery: !Ref ScanLimitBytes
+        EngineVersion:
+          SelectedEngineVersion: Athena engine version 3
+        ResultConfiguration:
+          OutputLocation: !Sub "s3://${LakeBucket}/athena-results/"
+          EncryptionConfiguration:
+            EncryptionOption: SSE_S3
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+  QuickSightAthenaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: Lets QuickSight query the credit risk mart through Athena, and nothing else
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: quicksight.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: athena-mart-read
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AthenaWorkGroup
+                Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:StopQueryExecution
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:GetQueryResultsStream
+                  - athena:GetWorkGroup
+                Resource: !Sub "arn:${AWS::Partition}:athena:${AWS::Region}:${AWS::AccountId}:workgroup/${WorkGroup}"
+              - Sid: AthenaCatalog
+                Effect: Allow
+                Action:
+                  - athena:ListWorkGroups
+                  - athena:ListDataCatalogs
+                  - athena:GetDataCatalog
+                  - athena:ListDatabases
+                  - athena:GetDatabase
+                  - athena:ListTableMetadata
+                  - athena:GetTableMetadata
+                Resource: "*"
+              - Sid: GlueMetadata
+                Effect: Allow
+                Action:
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+                  - !Sub "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${DatabaseName}"
+                  - !Sub "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${DatabaseName}/*"
+              - Sid: ReadLake
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:GetBucketLocation
+                Resource:
+                  - !GetAtt LakeBucket.Arn
+                  - !Sub "${LakeBucket.Arn}/*"
+              - Sid: WriteQueryResults
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:AbortMultipartUpload
+                  - s3:ListMultipartUploadParts
+                Resource: !Sub "${LakeBucket.Arn}/athena-results/*"
+      Tags:
+        - Key: project
+          Value: !Ref ProjectName
+
+Outputs:
+  BucketName:
+    Value: !Ref LakeBucket
+  DatabaseName:
+    Value: !Ref Database
+  WorkGroupName:
+    Value: !Ref WorkGroup
+  QuickSightRoleArn:
+    Value: !GetAtt QuickSightAthenaRole.Arn

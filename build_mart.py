@@ -75,7 +75,7 @@ def build(raw: Path, db: Path, inject: bool = False, quiet: bool = False) -> duc
 def export(con: duckdb.DuckDBPyConnection, out: Path):
     (out / "tables").mkdir(parents=True, exist_ok=True)
     for t in EXPORT_TABLES:
-        con.execute(f"COPY {t} TO '{(out / 'tables' / (t + '.csv')).as_posix()}' (HEADER)")
+        con.execute(f"COPY (SELECT * FROM {t} ORDER BY ALL) TO '{(out / 'tables' / (t + '.csv')).as_posix()}' (HEADER)")
 
 
 def dashboard_data(con: duckdb.DuckDBPyConnection) -> dict:

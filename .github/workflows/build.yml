@@ -14,3 +14,5 @@ jobs:
       - run: python build_mart.py --inject   # fails unless every planted defect is caught
       - run: python -m pytest -q
       - run: npm test                        # dashboard figures = mart figures
+      - run: cfn-lint aws/infra.yaml
+      - run: python aws/deploy.py --dry-run  # full AWS deploy rehearsed against the API models
